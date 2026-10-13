@@ -1,0 +1,139 @@
+{
+ "block_tokens": 16,
+ "working_set_tokens": 54173,
+ "kinds": [
+  "born",
+  "recall",
+  "release",
+  "evict",
+  "evict_scratch"
+ ],
+ "runs": [
+  {
+   "file": "pilot-2.5gib-rep_1.bin",
+   "gib": "2.5",
+   "cohort": "pilot",
+   "rep": "rep_1",
+   "kv_tokens": 18192,
+   "n_blocks": 1136,
+   "n_events": 115692,
+   "end_ms": 80428.3984375,
+   "resumed_reuse_median": 0.004947433518862091,
+   "measured_cached_tokens": 3056,
+   "replay_exact": 192,
+   "inconsistent": 0,
+   "counts": {
+    "born": 38879,
+    "recall": 191,
+    "release": 38879,
+    "evict": 37384,
+    "evict_scratch": 359
+   }
+  },
+  {
+   "file": "pilot-3gib-rep_1.bin",
+   "gib": "3",
+   "cohort": "pilot",
+   "rep": "rep_1",
+   "kv_tokens": 21840,
+   "n_blocks": 1364,
+   "n_events": 115464,
+   "end_ms": 80456.0,
+   "resumed_reuse_median": 0.004947433518862091,
+   "measured_cached_tokens": 3056,
+   "replay_exact": 192,
+   "inconsistent": 0,
+   "counts": {
+    "born": 38879,
+    "recall": 191,
+    "release": 38879,
+    "evict": 37158,
+    "evict_scratch": 357
+   }
+  },
+  {
+   "file": "main-4.5gib-rep_1.bin",
+   "gib": "4.5",
+   "cohort": "main",
+   "rep": "rep_1",
+   "kv_tokens": 32768,
+   "n_blocks": 2047,
+   "n_events": 114781,
+   "end_ms": 79695.796875,
+   "resumed_reuse_median": 0.004947433518862091,
+   "measured_cached_tokens": 3056,
+   "replay_exact": 192,
+   "inconsistent": 0,
+   "counts": {
+    "born": 38879,
+    "recall": 191,
+    "release": 38879,
+    "evict": 36481,
+    "evict_scratch": 351
+   }
+  },
+  {
+   "file": "pilot-6gib-rep_1.bin",
+   "gib": "6",
+   "cohort": "pilot",
+   "rep": "rep_1",
+   "kv_tokens": 43680,
+   "n_blocks": 2729,
+   "n_events": 114099,
+   "end_ms": 80944.703125,
+   "resumed_reuse_median": 0.004947433518862091,
+   "measured_cached_tokens": 3056,
+   "replay_exact": 192,
+   "inconsistent": 0,
+   "counts": {
+    "born": 38879,
+    "recall": 191,
+    "release": 38879,
+    "evict": 35805,
+    "evict_scratch": 345
+   }
+  },
+  {
+   "file": "pilot-8gib-rep_1.bin",
+   "gib": "8",
+   "cohort": "pilot",
+   "rep": "rep_1",
+   "kv_tokens": 58240,
+   "n_blocks": 3639,
+   "n_events": 78207,
+   "end_ms": 34075.3984375,
+   "resumed_reuse_median": 0.9888751545117429,
+   "measured_cached_tokens": 562768,
+   "replay_exact": 168,
+   "inconsistent": 0,
+   "counts": {
+    "born": 3897,
+    "recall": 35173,
+    "release": 38879,
+    "evict": 77,
+    "evict_scratch": 181
+   }
+  },
+  {
+   "file": "main-10gib-rep_1.bin",
+   "gib": "10",
+   "cohort": "main",
+   "rep": "rep_1",
+   "kv_tokens": 72816,
+   "n_blocks": 4550,
+   "n_events": 77949,
+   "end_ms": 34368.3984375,
+   "resumed_reuse_median": 0.9887919603601089,
+   "measured_cached_tokens": 562720,
+   "replay_exact": 171,
+   "inconsistent": 0,
+   "counts": {
+    "born": 3900,
+    "recall": 35170,
+    "release": 38879,
+    "evict": 0,
+    "evict_scratch": 0
+   }
+  }
+ ]
+}

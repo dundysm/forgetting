@@ -1,0 +1,18 @@
+{
+ "points": 72816,
+ "cortex_points": 450000,
+ "cortex_lo": [
+  -1.1950610695641493,
+  -1.2312925549032354,
+  -1.500235271868716
+ ],
+ "cortex_hi": [
+  1.1949664950706922,
+  1.230673148915268,
+  1.5021222728515342
+ ],
+ "layout": "pos[3n] nrm[3n] depth_mm[n] hemi[n] float32",
+ "scale_units_per_mm": 0.01646136583368732,
+ "source": "MNI152NLin2009cAsym res-01 GM+WM probseg, TemplateFlow",
+ "depth_p90_mm": 1.7677821713676343
+}

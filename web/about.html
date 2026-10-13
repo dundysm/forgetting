@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>forgetting · how this was made</title>
+<meta name="description" content="How 'forgetting' was made: a real vLLM benchmark, a replay of vLLM's KV block manager checked against the measurements, and a real human cortex from MRI.">
+<style>
+  :root { --ink: #dfe5ee; --mute: #8b95a3; --dim: #5d6672; --gold: #ffb85c; --cyan: #59f0ff; --line: #ffffff1a; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; color: var(--ink); font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 20px 96px; }
+  a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: #ffffff55; }
+  .kick { font: 12px var(--mono); letter-spacing: .2em; color: var(--dim); text-transform: lowercase; }
+  h1 { font: 500 40px/1.1 var(--mono); letter-spacing: -.02em; margin: 10px 0 18px; text-transform: lowercase; }
+  h2 { font: 500 13px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin: 52px 0 14px; }
+  p { color: #c3cbd6; margin: 0 0 14px; }
+  .lede { font-size: 18px; color: var(--ink); }
+  .nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 18px 0 8px; }
+  .nums div { background: #000; padding: 14px 16px; }
+  .nums b { display: block; font: 500 24px var(--mono); }
+  .nums span { font: 12px var(--mono); color: var(--mute); }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 8px 0; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+  td:first-child { white-space: nowrap; }
+  .tag { font: 11px var(--mono); padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); white-space: nowrap; }
+  .tag.m { color: #9fe3b0; border-color: #9fe3b044; }
+  .tag.r { color: #e8c98a; border-color: #e8c98a44; }
+  .tag.a { color: #a9b6ff; border-color: #a9b6ff44; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+  code { font: 13.5px var(--mono); color: #e7ecf3; }
+  .back { font: 13px var(--mono); color: var(--mute); text-decoration: none; }
+  .foot { margin-top: 56px; font-size: 13.5px; color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← back to the brain</a>
+  <div class="kick" style="margin-top:28px">forgetting · how this was made</div>
+  <h1>an AI agent's memory, replayed inside a real brain</h1>
+  <p class="lede">Every bright point is one token slot of an LLM serving engine's memory, the KV cache, replaying a real benchmark run event by event. Give the engine enough memory and its brain glows with recall. Starve it and it forgets each conversation just before that conversation comes back.</p>
+
+  <div class="nums">
+    <div><b>0.5% → 98.9%</b><span>of each resumed prompt reused from cache, 4.5 → 10 GiB</span></div>
+    <div><b>581 → 67 ms</b><span>median time to first token on a resumed turn</span></div>
+    <div><b>36,481 → 0</b><span>blocks of reusable memory forgotten per run</span></div>
+    <div><b>2.35 s</b><span>median time between forgetting a block and its session coming back for it</span></div>
+  </div>
+
+  <h2>The experiment</h2>
+  <p>vLLM 0.31.0 serving Qwen3-4B-Instruct on one NVIDIA A40. 16 scripted agent sessions take turns, 12 turns each. Every turn re-sends the session's whole history (about 3,000–3,400 tokens), with a 0.5 s "tool call" pause before the next turn and 4 requests in flight. Prefix caching lets a turn reuse the KV cache of its own previous turn, if that cache is still on the GPU.</p>
+  <p>The only thing that changes between the two brains is how much GPU memory the KV cache gets: 4.5 GiB holds 32,768 tokens, and 10 GiB holds 72,816. The 16 sessions' histories need 54,173. At 4.5 GiB the pool is big enough for every request that is actually running, but not for all the idle sessions waiting their turn. LRU eviction always throws out the session that has waited longest, which, because the sessions take turns in a circle, is exactly the one that is up next. There were zero preemptions in every run: all the forgetting happens to sessions that are idle.</p>
+  <p>Full method, pre-registration and raw data: <a href="https://github.com/dundysm/inference-under-pressure">github.com/dundysm/inference-under-pressure</a>.</p>
+
+  <h2>What you are seeing</h2>
+  <table>
+    <tr><th>on screen</th><th>what it is</th><th>source</th></tr>
+    <tr><td>the brain's folds</td><td>A real human cortex: the Colin27 MRI, one person scanned 27 times, segmented and surfaced at 0.5 mm (1.2M vertices, 2,029 cm² of cortex). Drawn as 450,000 dim points, shaded by how deep each point sits in a fold.</td><td><span class="tag a">anatomy</span></td></tr>
+    <tr><td>a point of light</td><td>One token slot of the KV cache, fixed to one spot on the cortex. The pool size is the number of lights.</td><td><span class="tag m">measured</span></td></tr>
+    <tr><td><span class="dot" style="background:#fff"></span>white, condensing</td><td>Tokens being computed into memory: a request's prefill, or its decode blocks.</td><td><span class="tag m">measured</span> timing · <span class="tag r">replay</span> slot</td></tr>
+    <tr><td><span class="dot" style="background:var(--gold)"></span>gold flare</td><td>A prefix-cache hit: history read back from memory instead of recomputed.</td><td><span class="tag m">measured</span></td></tr>
+    <tr><td>dim, breathing</td><td>Remembered but idle: cached and evictable, waiting for its session.</td><td><span class="tag r">replay</span></td></tr>
+    <tr><td>spark, then dust</td><td>Forgotten: the block is evicted and rewritten with someone else's tokens.</td><td><span class="tag r">replay</span></td></tr>
+    <tr><td><span class="dot" style="background:var(--cyan)"></span>cyan</td><td>One session (agent 5), highlighted so you can follow its memory.</td><td><span class="tag m">measured</span></td></tr>
+  </table>
+  <p>Which point on the cortex a memory slot sits on is an artistic choice: each block's 16 tokens form one grain of cortex, and grains are shuffled so a session's memory is spread across the whole brain. The anatomy carries no data. Everything that moves does.</p>
+
+  <h2>How the replay works, and how it was checked</h2>
+  <p>vLLM reports, per request, how many prompt tokens came from the cache. It does not log which GPU block was evicted when. To animate each block, <code>tools/replay.py</code> replays vLLM v1's block manager over the measured request timeline, using the real start time, time to first token, end time and size of every request:</p>
+  <p>Prompt blocks are allocated at request start, and decode blocks at the first token. At request end, all of a request's blocks go to the tail of an LRU free queue in reverse order. New allocations evict from the head. Which blocks are reused comes straight from the measured cached-token counts. The replay decides only when everything else is evicted.</p>
+  <p>The check: every block the engine actually reused must still be in the replayed cache at that moment. It was, for every reuse in all 15 runs, with <b>0 inconsistencies</b>. On its own, without being told the measured reuse, the replay predicts the measured cached tokens exactly for 192/192 requests at every budget from 2.5 to 6 GiB, and 168–171/192 at 8 and 10 GiB. Each miss there is one 16-token block, the one holding the end of the previous prompt plus the model's reply. In those requests the next scripted prompt happened to start with the same tokens the model had generated.</p>
+  <table>
+    <tr><th>KV budget</th><th>pool (tokens)</th><th>resumed reuse</th><th>forgotten blocks</th><th>replay exact</th></tr>
+    <tr><td>2.5 GiB</td><td>18,192</td><td>0.5%</td><td>37,384</td><td>192 / 192</td></tr>
+    <tr><td>3 GiB</td><td>21,840</td><td>0.5%</td><td>37,158</td><td>192 / 192</td></tr>
+    <tr><td>4.5 GiB</td><td>32,768</td><td>0.5%</td><td>36,481</td><td>192 / 192</td></tr>
+    <tr><td>6 GiB</td><td>43,680</td><td>0.5%</td><td>35,805</td><td>192 / 192</td></tr>
+    <tr><td>8 GiB</td><td>58,240</td><td>98.9%</td><td>77</td><td>168 / 192</td></tr>
+    <tr><td>10 GiB</td><td>72,816</td><td>98.9%</td><td>0</td><td>171 / 192</td></tr>
+  </table>
+  <p>Reuse is the measured median over resumed turns. Forgotten blocks count evictions of reusable prompt blocks in one run. One run per budget is shown. 4.5 and 10 GiB come from a pre-registered 5-repetition cohort: the forgotten counts are identical in all five repetitions (36,481 and 0), and the replay's exact matches at 10 GiB range from 168 to 171 of 192.</p>
+
+  <h2>Credits</h2>
+  <p>Brain: Colin27 average brain (Holmes et al., 1998), MNI / McConnell Brain Imaging Centre, via TemplateFlow. © 1993–2009 Louis Collins, McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill University, used under its permissive licence. Engine: vLLM. Rendering: three.js, WebGL.</p>
+  <p class="foot">by <a href="https://x.com/dundysm">@dundysm</a> · code and data: <a href="https://github.com/dundysm/forgetting">github.com/dundysm/forgetting</a></p>
+</main>
+</body>
+</html>
