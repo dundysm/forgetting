@@ -7,6 +7,9 @@
 <meta name="description" content="An AI agent's memory, replayed inside a real human brain. Every point of light is a token slot of vLLM's KV cache, replaying a real benchmark run.">
 <meta property="og:title" content="forgetting">
 <meta property="og:description" content="an AI agent's memory, replayed inside a real human brain">
+<meta property="og:image" content="https://dundysm.github.io/forgetting/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dundysm.github.io/forgetting/og.png">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
@@ -36,7 +39,10 @@
   #hud .f { color: #9db4ff; }
   #tag { display: none; position: fixed; left: 0; right: 0; bottom: 9%; text-align: center; color: #c5cdd8; font: 34px var(--mono); letter-spacing: .15em; }
   #tag span { display: block; margin-top: 8px; font-size: 21px; color: #6c7684; letter-spacing: .12em; }
-  @media (max-width: 640px) { #ui { bottom: 12px; left: 12px; right: 12px; } #title { left: 14px; top: 14px; } }
+  @media (max-width: 640px) {
+    #ui { bottom: 12px; left: 12px; right: 12px; } #title { left: 14px; top: 14px; }
+    #scrub { flex-wrap: wrap; min-width: 0; } #hud { flex-basis: 100%; white-space: normal; }
+  }
 </style>
 </head>
 <body>

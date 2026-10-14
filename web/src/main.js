@@ -47,7 +47,7 @@ composer.addPass(new OutputPass());
 function fitCamera() {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   if (CAPTURE) return;
-  const want = Math.hypot(3.9, 1.5, 2.6) * Math.max(1, 1.25 / camera.aspect);
+  const want = Math.hypot(3.9, 1.5, 2.6) * Math.max(1, 0.9 / camera.aspect);
   const d = camera.position.clone().sub(controls.target);
   camera.position.copy(controls.target).add(d.setLength(want));
 }

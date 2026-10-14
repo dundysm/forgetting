@@ -7,7 +7,7 @@ Every point of light is one token slot of vLLM's KV cache (the GPU memory an LLM
 - **4.5 GiB of memory:** the brain keeps forgetting each agent's history just before that agent comes back for it. 36,481 blocks of reusable memory are lost in one 80-second run, and every turn recomputes its history from scratch.
 - **10 GiB:** it remembers. 98.9% of each returning prompt is recalled from cache, time to first token drops from 581 ms to 67 ms, and nothing is forgotten.
 
-Interactive piece: `web/index.html`. How it was made, with the encoding table and validation: `web/about.html`.
+**Live:** [dundysm.github.io/forgetting](https://dundysm.github.io/forgetting/). How it was made, with the encoding table and validation: [about](https://dundysm.github.io/forgetting/about.html).
 
 ## Where the data comes from
 
@@ -26,6 +26,8 @@ python tools/pack.py build/replay web/data
 python tools/brain.py build/colin web/assets 72816 450000
 # 4. look at it
 python -m http.server 8780 --directory web
+# 5. render the 4:5 loop (13.34 s from 18.74 s into the run, following agent 5)
+python tools/capture.py forgetting.mp4 13.34 30 18740 5 stack
 ```
 
 ### The replay, and how it was checked
@@ -70,6 +72,10 @@ From that surface it samples:
 In the browser (`web/src/brain.js`), the pool's grains are chained nearest-neighbour across the surface, so block *b* sits next to block *b*+1. vLLM's free queue tends to hand out runs of neighbouring blocks, so a session's memory lands as one territory and visibly fragments as the LRU recycles slots.
 
 Where a slot sits on the brain is artistic. When it lights, how fast it settles (the request's measured time to first token), when it goes gold, how warm it stays (how often it was recalled) and when it turns to dust is data.
+
+## Licence
+
+Code: MIT. The brain data in `web/assets/` is derived from Colin27 and carries its own licence (below).
 
 ## Credits
 
