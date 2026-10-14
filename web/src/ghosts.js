@@ -13,7 +13,7 @@ export function createGhosts(capacityBlocks, layoutGLSL, shadeGLSL) {
   };
   for (const [k, v] of Object.entries(A)) { v.setUsage(THREE.DynamicDrawUsage); g.setAttribute(k, v); }
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
-  const uniforms = { uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uPixel: { value: 1 }, uSize: { value: 1 }, uLife: { value: 4000 } };
+  const uniforms = { uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uWind: { value: new THREE.Vector3(0.6, 0.8, 0) }, uPixel: { value: 1 }, uSize: { value: 1 }, uLife: { value: 2000 } };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: /* glsl */`
@@ -24,10 +24,12 @@ export function createGhosts(capacityBlocks, layoutGLSL, shadeGLSL) {
       void main() {
         float age = (uNow - aBorn) / uLife;
         vec3 p; float size; vec3 col; float a;
-        ghost(position, aNormal, aSess, aSeed, clamp(age, 0.0, 1.0), p, size, col, a);
+        ghost(position, aNormal, aSess, aSeed, clamp(age, 0.0, 1.0), uLife, p, size, col, a);
         if (age < 0.0 || age > 1.0) a = 0.0;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
+        vec2 ndc = gl_Position.xy / gl_Position.w;               // dust fades before it reaches the frame edge
+        a *= (1.0 - smoothstep(0.72, 0.95, abs(ndc.x))) * (1.0 - smoothstep(0.75, 0.97, abs(ndc.y)));
         gl_PointSize = size * uSize * uPixel * (7.0 / -mv.z);
         vColor = col; vAlpha = a;
       }`,

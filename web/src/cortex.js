@@ -19,7 +19,7 @@ export async function createCortex(base, meta, layoutGLSL, shadeGLSL) {
   g.setAttribute('aNormal', new THREE.BufferAttribute(nor, 3));
   g.setAttribute('aDepth', new THREE.BufferAttribute(dep, 1));
   g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
-  const uniforms = { uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uPixel: { value: 1 }, uSize: { value: 1 }, uGain: { value: 2.3 } };
+  const uniforms = { uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uWind: { value: new THREE.Vector3(0.6, 0.8, 0) }, uPixel: { value: 1 }, uSize: { value: 1 }, uGain: { value: 2.3 } };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: /* glsl */`
@@ -30,7 +30,7 @@ export async function createCortex(base, meta, layoutGLSL, shadeGLSL) {
       void main() {
         float fold = 1.0 - 0.92 * smoothstep(0.3, 4.5, aDepth);   // crowns bright, sulci dark
         float L = lit(position, aNormal) * fold;
-        vColor = vec3(0.36, 0.46, 0.72) * L * uGain;
+        vColor = vec3(0.27, 0.32, 0.43) * L * uGain;   // slate: the anatomy sits a tier below the memory
         vAlpha = 0.16 + 0.04 * sin(uTime * 0.7 + aSeed * 6.2831);
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mv;

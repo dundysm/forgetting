@@ -1,7 +1,7 @@
 """Pack replayed runs into compact binaries for the web piece.
 
 Usage: python tools/pack.py build/replay web/data
-Writes <run>.bin (struct of arrays: t float32 ms | block uint16 | index int16 | kind uint8 | session int8)
+Writes <run>.bin (struct of arrays: t float32 ms | write float32 ms | block uint16 | index int16 | kind uint8 | session int8)
 and index.json with each run's metadata, its per-request records and the measured headline numbers.
 """
 import json, statistics as st, sys
@@ -26,7 +26,8 @@ for name, gib in RUNS:
     block = np.array([e[2] for e in ev], np.uint16)
     sess = np.array([e[3] for e in ev], np.int8)
     idx = np.array([max(-1, min(32767, e[4])) for e in ev], np.int16)
-    blob = t.tobytes() + block.tobytes() + idx.tobytes() + kind.tobytes() + sess.tobytes()
+    write = np.array([e[5] if len(e) > 5 else 0.0 for e in ev], np.float32)   # born: ms to write (TTFT for prefill)
+    blob = t.tobytes() + write.tobytes() + block.tobytes() + idx.tobytes() + kind.tobytes() + sess.tobytes()
     (OUT / f"{name}.bin").write_bytes(blob)
     reqs = d["requests"]
     res = [r for r in reqs if r["turn"] > 0]

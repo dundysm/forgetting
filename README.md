@@ -65,9 +65,11 @@ A forgotten block is lost a median **2.35 s** before its session returns for it 
 
 From that surface it samples:
 - 450,000 anatomy points within 7 mm of the envelope.
-- One point per KV token slot on the visible cortex, grouped 16 to a block along a Z-order curve. The block grains are shuffled, so a session's memory is spread across the brain.
+- One point per KV token slot on the visible cortex, grouped 16 to a block grain. The file stores the grains shuffled, so a smaller pool takes a uniform subset of the cortex.
 
-Where a slot sits on the brain is artistic. When it lights, goes gold, or turns to dust is data.
+In the browser (`web/src/brain.js`), the pool's grains are chained nearest-neighbour across the surface, so block *b* sits next to block *b*+1. vLLM's free queue tends to hand out runs of neighbouring blocks, so a session's memory lands as one territory and visibly fragments as the LRU recycles slots.
+
+Where a slot sits on the brain is artistic. When it lights, how fast it settles (the request's measured time to first token), when it goes gold, how warm it stays (how often it was recalled) and when it turns to dust is data.
 
 ## Credits
 

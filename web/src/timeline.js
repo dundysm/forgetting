@@ -8,6 +8,7 @@
 //   index:   block index within that session's prompt (position in its history)
 //   tChange: when the state last changed (ms of run time), for transition animations
 //   recalls: how many times it was recalled (prefix hit) since being written
+//   writeMs: how long it took to write (the request's measured TTFT for prefill blocks)
 export const KIND = { born: 0, recall: 1, release: 2, evict: 3, evict_scratch: 4 };
 export const STATE = { empty: 0, written: 1, idle: 2, forgotten: 3, recalled: 4 };
 
@@ -20,11 +21,12 @@ export async function loadRun(base, meta) {
   const n = meta.n_events;
   let o = 0;
   const t = new Float32Array(buf, o, n); o += 4 * n;
+  const write = new Float32Array(buf, o, n); o += 4 * n;   // born: ms the block takes to be written (TTFT for prefill)
   const block = new Uint16Array(buf, o, n); o += 2 * n;
   const index = new Int16Array(buf, o, n); o += 2 * n;
   const kind = new Uint8Array(buf, o, n); o += n;
   const session = new Int8Array(buf, o, n);
-  return { meta, n, t, block, index, kind, session };
+  return { meta, n, t, write, block, index, kind, session };
 }
 
 export class Timeline {
@@ -36,6 +38,7 @@ export class Timeline {
     this.index = new Int16Array(nb);
     this.tChange = new Float32Array(nb).fill(-1e9);
     this.recalls = new Uint16Array(nb);
+    this.writeMs = new Float32Array(nb);
     this.dirty = true;
     this.reset();
   }
@@ -55,7 +58,7 @@ export class Timeline {
       const i = this.cursor++, b = R.block[i], k = R.kind[i], tt = R.t[i];
       if (k === KIND.born) {
         S[b] = STATE.written; this.session[b] = R.session[i]; this.index[b] = R.index[i];
-        this.recalls[b] = 0; this.stats.born++;
+        this.recalls[b] = 0; this.writeMs[b] = R.write[i]; this.stats.born++;
       } else if (k === KIND.recall) {
         S[b] = STATE.recalled; this.recalls[b]++; this.stats.recall++;
       } else if (k === KIND.release) {

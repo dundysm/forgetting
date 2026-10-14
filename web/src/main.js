@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { loadIndex, loadRun, Timeline, KIND } from './timeline.js';
 import { createStars } from './stars.js';
 import { createGhosts } from './ghosts.js';
@@ -27,8 +28,20 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.35; controls.target.set(0, 0.0, 0);
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.35, 0.2);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.12, 0.42);   // only flares bloom
 composer.addPass(bloom);
+// hue-preserving clamp (stacked additive gold stays gold, not white) and edges fading to true black
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      c.rgb /= max(1.0, max(c.r, max(c.g, c.b)));
+      c.rgb *= smoothstep(0.0, 0.06, min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y)));
+      gl_FragColor = c;
+    }`,
+}));
 composer.addPass(new OutputPass());
 // keep the whole brain in frame on any screen: back the camera off on tall/narrow windows
 function fitCamera() {
@@ -55,7 +68,7 @@ async function show(gib) {
   runMeta = index.runs.find(r => r.gib === gib);
   const run = await loadRun(DATA, runMeta);
   if (stars) { scene.remove(stars.points); stars.points.geometry.dispose(); }
-  if (!ghosts) { ghosts = createGhosts(2400, LAYOUT, SHADE); scene.add(ghosts.points); }
+  if (!ghosts) { ghosts = createGhosts(1600, LAYOUT, SHADE); scene.add(ghosts.points); }
   ghosts.clear();
   face = brainFace(brain, runMeta.n_blocks * 16);   // one point of cortex per token slot of this pool
   stars = createStars(runMeta.n_blocks, face, LAYOUT, SHADE);
@@ -99,6 +112,11 @@ function advance(ms) {
 }
 function draw(clockSec) {
   const now_ms = Math.min(runTime, tl.duration + 3500);
+  // dust always rises toward the screen's upper right, whatever the camera does
+  camera.updateMatrixWorld();
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+  const wind = right.multiplyScalar(0.6).add(up).normalize();
+  for (const u of [stars.uniforms, ghosts.uniforms, cortex.uniforms]) u.uWind.value.copy(wind);
   for (const u of [stars.uniforms, ghosts.uniforms, cortex.uniforms]) { u.uNow.value = now_ms; u.uTime.value = clockSec; u.uPixel.value = renderer.getPixelRatio(); }
   for (const u of [stars.uniforms, ghosts.uniforms, cortex.uniforms]) if (!CAPTURE) u.uFocus.value = focus;
   const s = tl.stats;
@@ -112,13 +130,17 @@ if (CAPTURE) {
   for (const id of ['ui', 'title']) document.getElementById(id).style.display = 'none';
   controls.enabled = false; controls.autoRotate = false;
   const tag = document.getElementById('tag');
-  tag.textContent = `${runMeta.gib} GiB`; tag.style.display = 'block';
+  tag.style.display = 'block';
+  let base = null;   // the forgotten counter counts from the clip's first frame
+  window.__f.setBaseline = () => { base = tl.stats.evict; };
   window.__f.renderAt = (ms, orbit = 0, dist = 1, focus = -9, height = 1.5) => {
     advance(ms);
     for (const u of [stars.uniforms, ghosts.uniforms, cortex.uniforms]) u.uFocus.value = focus;
     const r = Math.hypot(3.9, 2.6) * dist, a0 = Math.atan2(2.6, 3.9) + orbit;
     camera.position.set(Math.cos(a0) * r, height * dist, Math.sin(a0) * r); camera.lookAt(0, 0.05, 0);
     draw(ms / 1000);
+    const lost = base === null ? 0 : tl.stats.evict - base;
+    tag.innerHTML = `kv cache · ${runMeta.gib} GiB<span>forgotten ${lost.toLocaleString()}</span>`;
     return { forgotten: tl.stats.evict, remembered: tl.stats.recall };
   };
 } else {

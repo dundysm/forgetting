@@ -39,7 +39,7 @@ def replay(rows, n_blocks):
     missing = [0]
     owner_of = {}
 
-    def evict_alloc(t, s, idx, k):
+    def evict_alloc(t, s, idx, k, write_ms=0.0):
         b, _ = free.popitem(last=False)
         old = key_of.get(b)
         if old is not None:
@@ -53,7 +53,7 @@ def replay(rows, n_blocks):
         if k is not None and not (isinstance(k, tuple) and k[0] == "u"):
             by_key[k] = b
         ref[b] = 1
-        events.append((t, "born", b, s, idx))
+        events.append((t, "born", b, s, idx, write_ms))
         return b
 
     timeline = []
@@ -107,7 +107,7 @@ def replay(rows, n_blocks):
                         del by_key[k]; key_of[b] = key(i); by_key[key(i)] = b
                 blocks.append(b)
             for i in range(hit, -(-P // B)):
-                blocks.append(evict_alloc(t, s, i, key(i)))
+                blocks.append(evict_alloc(t, s, i, key(i), r["ttft_ms"]))
             held[rid] = blocks
             prev_prompt[s] = P
             per_req.append({"session": s, "turn": r["turn"], "prompt": P, "measured": r["cached_tokens"], "replay": pred * B})
@@ -119,7 +119,7 @@ def replay(rows, n_blocks):
                     k = ("x", s, i)
                 else:
                     uniq[0] += 1; k = ("u", uniq[0])
-                blocks.append(evict_alloc(t, s, i, k))
+                blocks.append(evict_alloc(t, s, i, k, 30.0))
         else:
             for b in reversed(held.pop(rid)):
                 ref[b] -= 1

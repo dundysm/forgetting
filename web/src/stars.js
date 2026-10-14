@@ -19,7 +19,7 @@ export function createStars(nBlocks, face, layoutGLSL, shadeGLSL) {
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
   const uniforms = {
     uBlocks: { value: tex }, uTexW: { value: W }, uTexH: { value: H },
-    uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uPixel: { value: 1 }, uSize: { value: 1.0 },
+    uNow: { value: 0 }, uTime: { value: 0 }, uFocus: { value: -9 }, uWind: { value: new THREE.Vector3(0.6, 0.8, 0) }, uPixel: { value: 1 }, uSize: { value: 1.0 },
   };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -30,7 +30,7 @@ export function createStars(nBlocks, face, layoutGLSL, shadeGLSL) {
       ${layoutGLSL}
       void main() {
         vec2 uv = vec2((mod(aSlot, uTexW) + 0.5) / uTexW, (floor(aSlot / uTexW) + 0.5) / uTexH);
-        vec4 B = texture2D(uBlocks, uv);            // state, session, index, tChange
+        vec4 B = texture2D(uBlocks, uv);            // state, session, recalls*10000 + write ms, tChange
         vec3 p; float size; vec3 col; float a;
         place(B.x, B.y, B.z, position, aNormal, aSeed, aDepth, (uNow - B.w) / 1000.0, p, size, col, a);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
@@ -54,7 +54,7 @@ export function createStars(nBlocks, face, layoutGLSL, shadeGLSL) {
     const d = tex.image.data;
     for (let b = 0; b < nBlocks; b++) {
       const o = b * 4;
-      d[o] = tl.state[b]; d[o + 1] = tl.session[b]; d[o + 2] = tl.index[b]; d[o + 3] = tl.tChange[b];
+      d[o] = tl.state[b]; d[o + 1] = tl.session[b]; d[o + 2] = Math.min(tl.recalls[b], 3) * 10000 + Math.min(9999, tl.writeMs[b]); d[o + 3] = tl.tChange[b];
     }
     tex.needsUpdate = true;
   }
